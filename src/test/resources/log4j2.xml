@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+    <Properties>
+        <Property name="LOG_LEVEL">${sys:qa.log.level:-INFO}</Property>
+        <Property name="LOG_DIR">${sys:test.logs.directory:-target/test-logs}</Property>
+        <Property name="CONSOLE_PATTERN">%d{HH:mm:ss.SSS} | TID=%T | %-5level | %c{1}.%M | test=%X{testName} | %msg%n%throwable{full}</Property>
+        <Property name="FILE_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} | TID=%T | %-5level | %c{1}.%M | testId=%X{testId} | test=%X{testDisplayName}%n%msg%n%throwable{full}</Property>
+    </Properties>
+
+    <Appenders>
+        <Console name="CONSOLE" target="SYSTEM_OUT">
+            <PatternLayout pattern="${CONSOLE_PATTERN}"/>
+        </Console>
+
+        <Routing name="ROUTED_TEST_FILE">
+            <Routes pattern="$${ctx:testId:-suite}">
+                <Route>
+                    <RollingFile name="TEST_FILE-${ctx:testId:-suite}"
+                                 fileName="${LOG_DIR}/${ctx:testId:-suite}.log"
+                                 filePattern="${LOG_DIR}/archive/${ctx:testId:-suite}-%i.log.gz"
+                                 append="false">
+                        <PatternLayout pattern="${FILE_PATTERN}"/>
+                        <Policies>
+                            <SizeBasedTriggeringPolicy size="5 MB"/>
+                        </Policies>
+                        <DefaultRolloverStrategy max="3"/>
+                    </RollingFile>
+                </Route>
+            </Routes>
+        </Routing>
+
+        <Async name="ASYNC_ROUTED_TEST_FILE" blocking="true" bufferSize="4096" includeLocation="true">
+            <AppenderRef ref="ROUTED_TEST_FILE"/>
+        </Async>
+
+        <AllureBuffer name="ALLURE_BUFFER">
+            <PatternLayout pattern="${FILE_PATTERN}"/>
+        </AllureBuffer>
+    </Appenders>
+
+    <Loggers>
+        <Logger name="com.flamingo.qa" level="${LOG_LEVEL}" additivity="false" includeLocation="true">
+            <AppenderRef ref="CONSOLE"/>
+            <AppenderRef ref="ASYNC_ROUTED_TEST_FILE"/>
+            <AppenderRef ref="ALLURE_BUFFER"/>
+        </Logger>
+
+        <Logger name="org.apache.http" level="WARN"/>
+        <Logger name="io.restassured" level="WARN"/>
+        <Logger name="com.microsoft.playwright" level="WARN"/>
+
+        <Root level="INFO" includeLocation="true">
+            <AppenderRef ref="CONSOLE"/>
+            <AppenderRef ref="ASYNC_ROUTED_TEST_FILE"/>
+            <AppenderRef ref="ALLURE_BUFFER"/>
+        </Root>
+    </Loggers>
+</Configuration>

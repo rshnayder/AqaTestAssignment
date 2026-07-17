@@ -1,0 +1,24 @@
+[
+  {
+    "firstname": "Ada",
+    "lastname": "Lovelace",
+    "totalprice": 420,
+    "depositpaid": true,
+    "bookingdates": {
+      "checkin": "2026-09-10",
+      "checkout": "2026-09-15"
+    },
+    "additionalneeds": "Breakfast"
+  },
+  {
+    "firstname": "Grace",
+    "lastname": "Hopper",
+    "totalprice": 515,
+    "depositpaid": false,
+    "bookingdates": {
+      "checkin": "2026-10-01",
+      "checkout": "2026-10-08"
+    },
+    "additionalneeds": "Late checkout"
+  }
+]
