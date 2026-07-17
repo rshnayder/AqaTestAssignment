@@ -6,6 +6,11 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,6 +33,10 @@ jobs:
       - name: Run tests
         run: mvn -B test -Dui.headless=true
 
+      - name: Generate Allure report
+        if: always()
+        run: mvn -B allure:report
+
       - name: Upload Allure results
         if: always()
         uses: actions/upload-artifact@v4
@@ -41,3 +50,27 @@ jobs:
         with:
           name: surefire-reports
           path: target/surefire-reports
+
+      - name: Configure GitHub Pages
+        if: always() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: actions/configure-pages@v5
+
+      - name: Upload Allure HTML report for Pages
+        if: always() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: target/site/allure-maven-plugin
+
+  deploy-allure-report:
+    needs: test
+    if: always() && (github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy Allure report to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
